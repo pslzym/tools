@@ -1,0 +1,206 @@
+if v:lang =~ "utf8$" || v:lang =~ "UTF-8$"
+   set fileencodings=ucs-bom,utf-8,latin1
+endif
+
+set nocompatible	" Use Vim defaults (much better!)
+set bs=indent,eol,start		" allow backspacing over everything in insert mode
+"set ai			" always set autoindenting on
+"set backup		" keep a backup file
+set viminfo='20,\"50	" read/write a .viminfo file, don't store more
+			" than 50 lines of registers
+set history=50		" keep 50 lines of command line history
+set ruler		" show the cursor position all the time
+
+" Only do this part when compiled with support for autocommands
+if has("autocmd")
+  augroup redhat
+  autocmd!
+  " In text files, always limit the width of text to 78 characters
+  " autocmd BufRead *.txt set tw=78
+  " When editing a file, always jump to the last cursor position
+  autocmd BufReadPost *
+  \ if line("'\"") > 0 && line ("'\"") <= line("$") |
+  \   exe "normal! g'\"" |
+  \ endif
+  " don't write swapfile on most commonly used directories for NFS mounts or USB sticks
+  autocmd BufNewFile,BufReadPre /media/*,/run/media/*,/mnt/* set directory=~/tmp,/var/tmp,/tmp
+  " start with spec file template
+  autocmd BufNewFile *.spec 0r /usr/share/vim/vimfiles/template.spec
+  augroup END
+endif
+
+if has("cscope") && filereadable("/usr/bin/cscope")
+   set csprg=/usr/bin/cscope
+   set csto=0
+   set cst
+   set nocsverb
+   " add any database in current directory
+   if filereadable("cscope.out")
+      cs add $PWD/cscope.out
+   " else add database pointed to by environment
+   elseif $CSCOPE_DB != ""
+      cs add $CSCOPE_DB
+   endif
+   set csverb
+endif
+
+" Switch syntax highlighting on, when the terminal has colors
+" Also switch on highlighting the last used search pattern.
+if &t_Co > 2 || has("gui_running")
+  syntax on
+  set hlsearch
+endif
+
+filetype plugin on
+
+if &term=="xterm"
+     set t_Co=8
+     set t_Sb=[4%dm
+     set t_Sf=[3%dm
+endif
+
+" Don't wake up system with blinking cursor:
+" http://www.linuxpowertop.org/known.php
+let &guicursor = &guicursor . ",a:blinkon0"
+
+"et expandtab
+"set paste
+set ts=4
+set sw=4
+"set autoindent
+set foldmethod=indent
+set nofoldenable
+nmap <C-_>s :cs find s <C-R>=expand("<cword>")<CR><CR>
+nmap <C-_>g :cs find g <C-R>=expand("<cword>")<CR><CR>
+nmap <C-_>c :cs find c <C-R>=expand("<cword>")<CR><CR>
+nmap <C-_>t :cs find t <C-R>=expand("<cword>")<CR><CR>
+nmap <C-_>e :cs find e <C-R>=expand("<cword>")<CR><CR>
+nmap <C-_>f :cs find f <C-R>=expand("<cfile>")<CR><CR>
+nmap <C-_>i :cs find i ^<C-R>=expand("<cfile>")<CR>$<CR>
+nmap <C-_>d :cs find d <C-R>=expand("<cword>")<CR><CR>
+
+let mapleader=";" 
+
+:au BufWinEnter *.[ch] let w:m1=matchadd('Search', '\%<81v.\%>77v', -1)
+:au BufWinEnter *.[ch] let w:m2=matchadd('ErrorMsg', '\%>80v.\+', -1)
+filetype plugin on
+"filetype plugin indent on
+syntax on
+"colorscheme solarized
+
+"go configure
+autocmd BufWritePre *.go :Fmt
+let g:tagbar_left = 1
+let g:tagbar_type_go = {
+    \ 'ctagstype' : 'go',
+    \ 'kinds'     : [
+        \ 'p:package',
+        \ 'i:imports:1',
+        \ 'c:constants',
+        \ 'v:variables',
+        \ 't:types',
+        \ 'n:interfaces',
+        \ 'w:fields',
+        \ 'e:embedded',
+        \ 'm:methods',
+        \ 'r:constructor',
+        \ 'f:functions'
+    \ ],
+    \ 'sro' : '.',
+    \ 'kind2scope' : {
+        \ 't' : 'ctype',
+        \ 'n' : 'ntype'
+    \ },
+    \ 'scope2kind' : {
+        \ 'ctype' : 't',
+        \ 'ntype' : 'n'
+    \ },
+    \ 'ctagsbin'  : 'gotags',
+    \ 'ctagsargs' : '-sort -silent'
+		\ }
+
+if version >= 700
+	set cursorline
+	hi CursorLine cterm=bold
+endif
+
+:autocmd InsertEnter * set nocul 
+:autocmd InsertLeave * set cul
+let &t_SI = "\<Esc>]50;CursorShape=1\x7"
+let &t_EI = "\<Esc>]50;CursorShape=0\x7"
+
+nmap <silent> <F4> :TagbarToggle<CR>
+vmap <F4> :GoTests<CR>
+nmap <F5> :execute "vimgrep /" . expand("<cword>") . "/j **" <Bar> cw<CR>
+nmap <F6> :cclose<CR>
+let g:tagbar_ctags_bin='/usr/bin/ctags'
+let g:tagbar_width=30
+
+let g:godef_split=2
+let g:godef_same_file_in_same_window=1
+
+
+" For vundle
+set nocompatible    " be iMproved
+filetype off        " required!
+set rtp+=~/.vim/bundle/vundle/
+call vundle#rc()
+" let Vundle manage Vundle
+" required!
+Bundle 'gmarik/vundle'
+" vim-scripts repos
+"Bundle 'vim-plugin-foo'
+"Bundle 'vim-plugin-bar'
+filetype plugin indent on    " required!
+
+set fileencoding=utf-8 
+set fileencodings=ucs-bom,utf-8,cp936,gb18030,big5,euc-jp,euc-kr,latin1
+
+map ; <Plug>(easymotion-prefix)
+map <Leader><leader>h <Plug>(easymotion-linebackward)
+map <Leader><Leader>j <Plug>(easymotion-j)
+map <Leader><Leader>k <Plug>(easymotion-k)
+map <Leader><leader>l <Plug>(easymotion-lineforward)
+map <Leader><leader>. <Plug>(easymotion-repeat)
+map <Leader><leader>/ <Plug>(easymotion-sn)
+
+Bundle 'ctrlp.vim'
+Bundle 'AutoClose'
+Bundle 'ShowTrailingWhitespace'
+Bundle 'FencView.vim'
+Bundle 'The-NERD-Commenter'
+Bundle 'UltiSnips'
+Bundle 'Tabular'
+Bundle 'Tagbar'
+Bundle 'vim-godef'
+Bundle 'easymotion/vim-easymotion'
+"Plugin 'Valloric/YouCompleteMe'
+Plugin 'fatih/vim-go'
+Plugin 'buoto/gotests-vim'
+Plugin 'vim-airline/vim-airline'
+Plugin 'vim-airline/vim-airline-themes'
+""Plugin 'Valloric/YouCompleteMe'
+"Plugin 'mileszs/ack.vim'
+"set backupskip=/tmp/*,/private/tmp/*
+
+
+" Quicker window movement
+nnoremap <C-j> <C-w>j
+nnoremap <C-k> <C-w>k
+nnoremap <C-h> <C-w>h
+nnoremap <C-l> <C-w>l
+
+" vim-airline
+let g:airline#extensions#tabline#enabled = 1
+
+set tabstop=4       " The width of a TAB is set to 4.
+                    " Still it is a \t. It is just that
+                    " Vim will interpret it to be having
+                    " a width of 4.
+
+set shiftwidth=4    " Indents will have a width of 4
+
+set softtabstop=4   " Sets the number of columns for a TAB
+
+set expandtab       " Expand TABs to spaces
+
